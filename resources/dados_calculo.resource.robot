@@ -1,44 +1,39 @@
 *** Settings ***
 Documentation     Keywords para preencher a tela de 'Dados do Cálculo'.
+...               Seletores extraídos do HTML real do formulário (html_pagina_calculo.md).
 
-Library           RPA.Windows
 Library           String
+
+*** Variables ***
+# Aba Dados do Processo — IDs extraídos do HTML real
+${CAMPO_NUMERO}       id:formulario:numero
 
 *** Keywords ***
 Preencher Aba Dados Do Processo
     [Arguments]    ${dados}
     Log To Console    Preenchendo aba 'Dados do Processo'.
-    # Seletores placeholder. Precisam ser confirmados com Inspect.exe
-    Input Text    name:"Nome do reclamante"    ${dados.nome_reclamante}
-    Input Text    name:"Nome do reclamado"     ${dados.nome_reclamado}
-    Input Text    name:"Nº do processo"        ${dados.numero_processo}
+    Preencher Campo Numero Do Processo    ${dados.numero_processo}
+    # Próximos campos serão adicionados progressivamente conforme validação
+
+Preencher Campo Numero Do Processo
+    [Arguments]    ${numero_processo_completo}
+    # O campo aceita apenas os 7 dígitos iniciais do número CNJ (ex: "0000123" de "0000123-45.2025.5.18.0012")
+    ${numero}=    Fetch From Left    ${numero_processo_completo}    -
+    Log To Console    Preenchendo campo 'Número' com: ${numero}
+    Wait Until Element Is Visible    ${CAMPO_NUMERO}    timeout=10s
+    Click Element                    ${CAMPO_NUMERO}
+    Input Text                       ${CAMPO_NUMERO}    ${numero}
 
 Preencher Aba Parametros Do Calculo
     [Arguments]    ${dados}
     Log To Console    Preenchendo aba 'Parâmetros do Cálculo'.
-    Click    name:Parâmetros do Cálculo  # Clica na aba
-
-    # Formata as datas para o formato DDMMYYYY sem separadores
-    ${admissao_str}=    Format Date For Input    ${dados.data_admissao}
-    ${demissao_str}=    Format Date For Input    ${dados.data_demissao}
-    ${ajuizamento_str}=    Format Date For Input    ${dados.data_ajuizamento}
-
-    # Seletores placeholder. Precisam ser confirmados com Inspect.exe
-    Input Text    name:"Admissão"              ${admissao_str}
-    Input Text    name:"Demissão"              ${demissao_str}
-    Input Text    name:"Ajuizamento"           ${ajuizamento_str}
-    Input Text    name:"Maior Remuneração"     ${dados.maior_remuneracao}
-    # Exemplo para ComboBox (Dropdown)
-    Click         name:"Estado (UF)"
-    Click         name:"${dados.uf}"
-    Click         name:"Município"
-    Click         name:"${dados.municipio}"
+    # A implementar conforme validação dos campos anteriores
 
 Salvar Dados Do Calculo
     Log To Console    Salvando dados do cálculo...
-    Click    name:Salvar
+    # A implementar
 
 Format Date For Input
     [Arguments]    ${date_obj}
     ${formatted}=    Convert Date    ${date_obj}    result_format=%d%m%Y
-    [Return]    ${formatted}
+    RETURN    ${formatted}
