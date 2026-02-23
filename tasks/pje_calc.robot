@@ -9,7 +9,8 @@ Library           ../libraries/pje_data_provider.py
 
 *** Tasks ***
 Criar E Preencher Novo Calculo Trabalhista
-    ${dados_processo}=    Obter Dados Para Calculo
+    # Busca dados do CSV calc_0000123.csv
+    ${dados_processo}=    Obter Dados Para Calculo    0000123
 
     Abrir PJe-Calc
     Navegar Para Novo Calculo

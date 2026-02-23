@@ -4,20 +4,33 @@ import glob
 import os
 import string
 import urllib.request
+import csv
 
 @dataclass
 class DadosProcesso:
     """Estrutura para conter os dados de um processo trabalhista."""
     numero_processo: str
-    nome_reclamante: str
-    nome_reclamado: str
-    uf: str
-    municipio: str
-    data_admissao: date
-    data_demissao: date
-    data_ajuizamento: date
-    maior_remuneracao: float
-    # Adicionar outros campos conforme necessário (faltas, férias, verbas, etc.)
+    digito: str
+    ano: str
+    tribunal: str
+    vara: str
+    valor_da_causa: str
+    
+    reclamante_nome: str
+    reclamante_doc_fiscal: str
+    reclamante_doc_prev: str
+    
+    reclamante_adv_nome: str
+    reclamante_adv_oab: str
+    reclamante_adv_doc_fiscal: str
+    
+    reclamado_nome: str
+    reclamado_doc_fiscal: str
+    
+    reclamado_adv_nome: str
+    reclamado_adv_oab: str
+    reclamado_adv_doc_fiscal: str
+    data_autuacao: str
 
 def localizar_bat_pjecalc() -> str:
     """
@@ -165,19 +178,61 @@ def criar_opcoes_novo(navegador: str, porta: int = 9222, com_debug_port: bool = 
     return options
 
 
-def obter_dados_para_calculo() -> DadosProcesso:
+def obter_dados_para_calculo(numero_busca: str = "0000123") -> DadosProcesso:
     """
-    Fornece um objeto com todos os dados necessários para um cálculo.
-    No futuro, esta função pode ler dados de um arquivo Excel, banco de dados, etc.
+    Busca dados em um arquivo CSV na pasta do projeto baseado no número do processo.
+    O arquivo deve seguir o padrão calc_XXXXXXX.csv.
     """
+    filename = f"calc_{numero_busca}.csv"
+    filepath = os.path.join(os.getcwd(), filename)
+    
+    if not os.path.exists(filepath):
+        # Fallback para dados fixos se o arquivo não existir (para testes iniciais)
+        return DadosProcesso(
+            numero_processo="0000123",
+            digito="45",
+            ano="2025",
+            tribunal="18",
+            vara="0012",
+            valor_da_causa="50000,00",
+            reclamante_nome="José da Silva",
+            reclamante_doc_fiscal="12345678901",
+            reclamante_doc_prev="12345678901",
+            reclamante_adv_nome="Dr. Advogado Reclamante",
+            reclamante_adv_oab="123456",
+            reclamante_adv_doc_fiscal="26375286050",
+            reclamado_nome="Construtora Exemplo S.A.",
+            reclamado_doc_fiscal="12345678000199",
+            reclamado_adv_nome="Dra. Advogada Reclamada",
+            reclamado_adv_oab="654321",
+            reclamado_adv_doc_fiscal="91036537064",
+            data_autuacao="20022026"
+        )
+
+    dados_dict = {}
+    with open(filepath, mode='r', encoding='utf-8') as csvfile:
+        reader = csv.reader(csvfile, delimiter=';')
+        for row in reader:
+            if len(row) == 2:
+                dados_dict[row[0].strip()] = row[1].strip()
+
     return DadosProcesso(
-        numero_processo="0000123-45.2025.5.18.0012",
-        nome_reclamante="José da Silva",
-        nome_reclamado="Construtora Exemplo S.A.",
-        uf="GO",
-        municipio="Goiânia",
-        data_admissao=date(2022, 1, 15),
-        data_demissao=date(2024, 12, 20),
-        data_ajuizamento=date(2025, 2, 5),
-        maior_remuneracao=3500.00,
+        numero_processo=dados_dict.get("Identificacao do Processo_Numero", ""),
+        digito=dados_dict.get("Identificacao do Digito", ""),
+        ano=dados_dict.get("Identificacao do Ano", ""),
+        tribunal=dados_dict.get("Identificacao do Tribunal", ""),
+        vara=dados_dict.get("Identificacao do Vara", ""),
+        valor_da_causa=dados_dict.get("Identificacao do Valor da Causa", ""),
+        reclamante_nome=dados_dict.get("Reclamante_Nome", ""),
+        reclamante_doc_fiscal=dados_dict.get("Reclamante_Documento_Fiscal_Numero", ""),
+        reclamante_doc_prev=dados_dict.get("Reclamante_Documento_Previdenciario_Numero", ""),
+        reclamante_adv_nome=dados_dict.get("Reclamante_Advogado_Nome", ""),
+        reclamante_adv_oab=dados_dict.get("Reclamante_Advogado_OAB", ""),
+        reclamante_adv_doc_fiscal=dados_dict.get("Reclamante_Advogado_Documento_Fiscal_Numero", ""),
+        reclamado_nome=dados_dict.get("Reclamado_Nome", ""),
+        reclamado_doc_fiscal=dados_dict.get("Reclamado_Documento_Fiscal_Numero", ""),
+        reclamado_adv_nome=dados_dict.get("Reclamado_Advogado_Nome", ""),
+        reclamado_adv_oab=dados_dict.get("Reclamado_Advogado_OAB", ""),
+        reclamado_adv_doc_fiscal=dados_dict.get("Reclamado_Advogado_Documento_Fiscal_Numero", ""),
+        data_autuacao=dados_dict.get("Identificacao do Processo_Autuado_em", "")
     )

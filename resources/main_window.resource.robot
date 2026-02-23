@@ -25,7 +25,7 @@ Abrir PJe-Calc
     ${debug_ativo}=    Verificar Debug Ativo
     Run Keyword If    ${debug_ativo}       Tratar Sessao Ativa
     Run Keyword If    not ${debug_ativo}   Iniciar Nova Sessao
-    Wait Until Page Contains Element    ${BTN_CRIAR_NOVO_CALCULO}    timeout=30s
+    RPA.Browser.Selenium.Wait Until Page Contains Element    ${BTN_CRIAR_NOVO_CALCULO}    timeout=30s
     Log To Console    Página principal carregada com sucesso.
 
 Tratar Sessao Ativa
@@ -57,6 +57,6 @@ Fechar PJe-Calc
 
 Navegar Para Novo Calculo
     Log To Console    Clicando em 'Criar Novo Cálculo'...
-    Wait Until Element Is Visible    ${BTN_CRIAR_NOVO_CALCULO}    timeout=15s
-    Click Element                    ${BTN_CRIAR_NOVO_CALCULO}
+    RPA.Browser.Selenium.Wait Until Element Is Visible    ${BTN_CRIAR_NOVO_CALCULO}    timeout=15s
+    RPA.Browser.Selenium.Click Element                    ${BTN_CRIAR_NOVO_CALCULO}
     Log To Console    Botão 'Criar Novo Cálculo' clicado com sucesso.
