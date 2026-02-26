@@ -1,0 +1,41 @@
+Identificacao do Processo_Numero;0000672
+Identificacao do Digito;72
+Identificacao do Ano;2025
+Identificacao do Tribunal;18
+Identificacao do Vara;0012
+Identificacao do Processo_Autuado_em;20022026
+Identificacao do Valor da Causa;50000,00
+Reclamante_Nome;José da Silva
+Reclamante_Documento_Fiscal_Numero;12345678909
+Reclamante_Documento_Previdenciario_Numero;12586516151
+Reclamante_Advogado_Nome;Dr. Advogado Reclamante
+Reclamante_Advogado_OAB;123456
+Reclamante_Advogado_Documento_Fiscal_Numero;12345678909
+Reclamado_Nome;Construtora Exemplo S.A.
+Reclamado_Documento_Fiscal_Numero;26677674000119
+Reclamado_Advogado_Nome;Dra. Advogada Reclamada
+Reclamado_Advogado_OAB;654321
+Reclamado_Advogado_Documento_Fiscal_Numero;12345678909
+Parametros_Estado;GO
+Parametros_Municipio;GOIANIA
+Parametros_Admissao;01012020
+Parametros_Demissao;01012025
+Parametros_Ajuizamento;20022026
+Parametros_Data_Inicial;01012020
+Parametros_Data_Final;01012025
+Parametros_Aplicar_Prescricao;SIM
+Parametros_Regime_Trabalho;INTEGRAL
+Parametros_Maior_Remuneracao;3500,00
+Parametros_Ultima_Remuneracao;4000,00
+Parametros_Prazo_Aviso_Previo;APURACAO_CALCULADA
+Parametros_Projetar_Aviso_Indenizado;SIM
+Parametros_Limitar_Avos_Periodo;NAO
+Parametros_Zerar_Valor_Negativo;NAO
+Parametros_Considerar_Feriados_Estaduais;SIM
+Parametros_Considerar_Feriados_Municipais;SIM
+Parametros_Carga_Horaria_Padrao_Semanal;44,00
+Parametros_Carga_Horaria_Padrao_Mensal;220,00
+Parametros_Divisor_Horas_Extras;220,00
+Parametros_Sabado_Dia_Util;SIM
+Excecao_CargaHoraria;01012021,31122021,180,00
+Excecao_Sabado;01012022,31122022

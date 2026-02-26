@@ -43,6 +43,56 @@ ${CAMPO_RECD_ADV_DOC_NUM}       id:formulario:numeroDocumentoAdvogadoReclamado
 ${BOTAO_RECD_ADV_ADICIONAR}     id:formulario:incluirAdvogadoReclamado
 ${TABELA_RECD_ADV}              id:formulario:listagemAdvogadoReclamado
 
+# --- ABA PARÂMETROS DO CÁLCULO ---
+# Localização
+${CAMPO_ESTADO}                 id:formulario:estado
+${CAMPO_MUNICIPIO}              id:formulario:municipio
+
+# Datas do Cálculo
+${CAMPO_DATA_ADMISSAO}          id:formulario:dataAdmissaoInputDate
+${CAMPO_DATA_DEMISSAO}          id:formulario:dataDemissaoInputDate
+${CAMPO_DATA_AJUIZAMENTO}       id:formulario:dataAjuizamentoInputDate
+
+# Limitar Cálculo / Prescrição
+${CAMPO_DATA_INICIAL}           id:formulario:dataInicioCalculoInputDate
+${CAMPO_DATA_FINAL}             id:formulario:dataTerminoCalculoInputDate
+${CHECK_APLICAR_PRESCRICAO}     id:formulario:prescricaoQuinquenal
+
+# Outros Parâmetros
+${CAMPO_REGIME_TRABALHO}        id:formulario:tipoDaBaseTabelada
+${CAMPO_MAIOR_REMUNERACAO}      id:formulario:valorMaiorRemuneracao
+${CAMPO_ULTIMA_REMUNERACAO}     id:formulario:valorUltimaRemuneracao
+${CAMPO_PRAZO_AVISO_PREVIO}     id:formulario:apuracaoPrazoDoAvisoPrevio
+
+# Checkboxes de Configuração
+${CHECK_PROJETAR_AVISO}         id:formulario:projetaAvisoIndenizado
+${CHECK_LIMITAR_AVOS}           id:formulario:limitarAvos
+${CHECK_ZERAR_VALOR_NEG}        id:formulario:zeraValorNegativo
+${CHECK_FERIADOS_ESTADUAIS}     id:formulario:consideraFeriadoEstadual
+${CHECK_FERIADOS_MUNICIPAIS}    id:formulario:consideraFeriadoMunicipal
+
+# Carga Horária
+${CAMPO_CH_PADRAO}              id:formulario:valorCargaHorariaPadrao
+${CAMPO_CH_EXC_INICIO}          id:formulario:dataInicioExcecaoInputDate
+${CAMPO_CH_EXC_FIM}             id:formulario:dataTerminoExcecaoInputDate
+${CAMPO_CH_EXC_VALOR}           id:formulario:valorCargaHoraria
+${BOTAO_CH_EXC_ADICIONAR}       id:formulario:incluirExcecaoCH
+${TABELA_CH_EXC}                id:formulario:painelListaExcecoesCargaHoraria
+
+# Sábado
+${CHECK_SABADO_UTIL}            id:formulario:sabadoDiaUtil
+${CAMPO_SAB_EXC_INICIO}         id:formulario:dataInicioExcecaoSabadoInputDate
+${CAMPO_SAB_EXC_FIM}            id:formulario:dataTerminoExcecaoSabadoInputDate
+${BOTAO_SAB_EXC_ADICIONAR}      id:formulario:incluirExcecaoSab
+${TABELA_SAB_EXC}               id:formulario:painelListaExcecoesDoSabado
+
+# Menu Lateral
+${MENU_HISTORICO_SALARIAL}      id:li_calculo_historico_salarial
+
+# Abas
+${ABA_DADOS_PROCESSO}           xpath://td[contains(text(), 'Dados do Processo')]
+${ABA_PARAMETROS_CALCULO}       xpath://td[contains(text(), 'Parâmetros do Cálculo')]
+
 *** Keywords ***
 Preencher Aba Dados Do Processo
     [Arguments]    ${dados}
@@ -241,11 +291,223 @@ Processamento PjeCalc Deve Estar Concluido
 Preencher Aba Parametros Do Calculo
     [Arguments]    ${dados}
     Log To Console    Preenchendo aba 'Parâmetros do Cálculo'.
+    
+    # Clicar na aba Parâmetros do Cálculo
+    Wait Until Element Is Visible    ${ABA_PARAMETROS_CALCULO}    timeout=10s
+    Click Element    ${ABA_PARAMETROS_CALCULO}
+    Esperar Processamento PjeCalc
+    Sleep    1s
+
+    # 1 - Localização (Estado e Município)
+    Select From List By Label    ${CAMPO_ESTADO}    ${dados.estado}
+    Log To Console    Estado selecionado: ${dados.estado}. Aguardando busca de municípios...
+    Sleep    2.5s    # Busca dura cerca de 2 segundos
+    Esperar Processamento PjeCalc
+    Select From List By Label    ${CAMPO_MUNICIPIO}    ${dados.municipio}
+    Esperar Processamento PjeCalc
+
+    # 2 - Datas do Cálculo
+    Preencher Campo Data    ${CAMPO_DATA_ADMISSAO}    ${dados.data_admissao}
+    Preencher Campo Data    ${CAMPO_DATA_DEMISSAO}    ${dados.data_demissao}
+    Preencher Campo Data    ${CAMPO_DATA_AJUIZAMENTO}    ${dados.data_ajuizamento}
+
+    # 3 - Limitar Cálculo / Prescrição
+    Preencher Campo Data    ${CAMPO_DATA_INICIAL}    ${dados.data_inicial_calculo}
+    Preencher Campo Data    ${CAMPO_DATA_FINAL}      ${dados.data_final_calculo}
+    Set Checkbox State    ${CHECK_APLICAR_PRESCRICAO}    ${dados.aplicar_prescricao}
+
+    # 4 - Outros Parâmetros
+    Select From List By Value    ${CAMPO_REGIME_TRABALHO}    ${dados.regime_trabalho}
+    
+    Preencher Campo Moeda    ${CAMPO_MAIOR_REMUNERACAO}    ${dados.maior_remuneracao}
+    Preencher Campo Moeda    ${CAMPO_ULTIMA_REMUNERACAO}   ${dados.ultima_remuneracao}
+    
+    Select From List By Value    ${CAMPO_PRAZO_AVISO_PREVIO}    ${dados.prazo_aviso_previo}
+    Esperar Processamento PjeCalc
+
+    # 5 - Checkboxes de Configuração
+    Set Checkbox State    ${CHECK_PROJETAR_AVISO}         ${dados.projetar_aviso_indenizado}
+    Set Checkbox State    ${CHECK_LIMITAR_AVOS}           ${dados.limitar_avos_periodo}
+    Set Checkbox State    ${CHECK_ZERAR_VALOR_NEG}        ${dados.zerar_valor_negativo}
+    Set Checkbox State    ${CHECK_FERIADOS_ESTADUAIS}     ${dados.considerar_feriados_estaduais}
+    Set Checkbox State    ${CHECK_FERIADOS_MUNICIPAIS}    ${dados.considerar_feriados_municipais}
+
+    # 6 - Carga Horária
+    # O campo Padrão já vem preenchido (ex: 220,00). Vamos apenas garantir o valor.
+    Wait Until Element Is Visible    ${CAMPO_CH_PADRAO}    timeout=5s
+    Click Element    ${CAMPO_CH_PADRAO}
+    Clear Element Text    ${CAMPO_CH_PADRAO}
+    Press Keys       ${CAMPO_CH_PADRAO}    ${dados.carga_horaria_mensal}
+    Press Keys       ${CAMPO_CH_PADRAO}    TAB
+    Esperar Processamento PjeCalc
+    
+    # Exceções Carga Horária
+    FOR    ${exc}    IN    @{dados.excecoes_carga_horaria}
+        Log To Console    Preenchendo Exceção CH: ${exc['inicio']} a ${exc['fim']} com valor ${exc['valor']}
+        
+        # Início
+        Wait Until Element Is Visible    ${CAMPO_CH_EXC_INICIO}    timeout=5s
+        Click Element    ${CAMPO_CH_EXC_INICIO}
+        Clear Element Text    ${CAMPO_CH_EXC_INICIO}
+        Press Keys       ${CAMPO_CH_EXC_INICIO}    ${exc['inicio']}
+        Press Keys       ${CAMPO_CH_EXC_INICIO}    TAB
+        Esperar Processamento PjeCalc
+        
+        # Fim
+        Wait Until Element Is Visible    ${CAMPO_CH_EXC_FIM}    timeout=5s
+        Click Element    ${CAMPO_CH_EXC_FIM}
+        Clear Element Text    ${CAMPO_CH_EXC_FIM}
+        Press Keys       ${CAMPO_CH_EXC_FIM}    ${exc['fim']}
+        Press Keys       ${CAMPO_CH_EXC_FIM}    TAB
+        Esperar Processamento PjeCalc
+
+        # Valor
+        Wait Until Element Is Visible    ${CAMPO_CH_EXC_VALOR}    timeout=5s
+        Click Element    ${CAMPO_CH_EXC_VALOR}
+        Clear Element Text    ${CAMPO_CH_EXC_VALOR}
+        Press Keys       ${CAMPO_CH_EXC_VALOR}    ${exc['valor']}
+        Press Keys       ${CAMPO_CH_EXC_VALOR}    TAB
+        Esperar Processamento PjeCalc
+
+        Log To Console    Clicando em Adicionar Base (CH)...
+        Click Element    ${BOTAO_CH_EXC_ADICIONAR}
+        Esperar Processamento PjeCalc
+        Sleep    1s
+    END
+
+    # 7 - Sábado
+    Set Checkbox State    ${CHECK_SABADO_UTIL}    ${dados.sabado_dia_util}
+    
+    # Exceções Sábado
+    FOR    ${exc}    IN    @{dados.excecoes_sabado}
+        Preencher Campo Data    ${CAMPO_SAB_EXC_INICIO}    ${exc['inicio']}
+        Preencher Campo Data    ${CAMPO_SAB_EXC_FIM}       ${exc['fim']}
+        Click Element    ${BOTAO_SAB_EXC_ADICIONAR}
+        Esperar Processamento PjeCalc
+        Sleep    0.5s
+    END
+
+Preencher Campo Data
+    [Arguments]    ${locator}    ${valor}
+    Run Keyword If    '${valor}' == '${EMPTY}'    Return From Keyword
+    Wait Until Element Is Visible    ${locator}    timeout=5s
+    Click Element    ${locator}
+    Clear Element Text    ${locator}
+    Press Keys       ${locator}    ${valor}
+    Press Keys       ${locator}    TAB
+    Esperar Processamento PjeCalc
+
+Preencher Campo Moeda
+    [Arguments]    ${locator}    ${valor}
+    Run Keyword If    '${valor}' == '${EMPTY}'    Return From Keyword
+    Wait Until Element Is Visible    ${locator}    timeout=5s
+    Click Element    ${locator}
+    Clear Element Text    ${locator}
+    Press Keys       ${locator}    ${valor}
+    Press Keys       ${locator}    TAB
+    Esperar Processamento PjeCalc
+
+Set Checkbox State
+    [Arguments]    ${locator}    ${expected_state}
+    Wait Until Element Is Visible    ${locator}    timeout=5s
+    
+    # Obtém o estado atual do checkbox de forma robusta
+    ${is_selected}=    Run Keyword And Return Status    Checkbox Should Be Selected    ${locator}
+    
+    IF    ${expected_state} != ${is_selected}
+        Click Element    ${locator}
+        Esperar Processamento PjeCalc
+    END
 
 Salvar Dados Do Calculo
-    Log To Console    Salvando dados do cálculo...
+    Log To Console    Aguardando verificação manual...
+    # Exibir mensagem de revisão solicitada via Windows MessageBox (ctypes)
+    Exibir Mensagem Windows    Formulário preenchido, fazer verificação e clicar em salvar para liberar os semais lançamentos
+    
+    # Loop infinito de re-tentativa controlado pelo usuário
+    WHILE    ${TRUE}
+        ${status}=    Executar Demais Lancamentos
+        
+        # Se a keyword retornou sucesso ou erro detectado, sai do loop principal
+        IF    '${status}' == 'CONCLUIDO'    BREAK
+        
+        # Se chegou aqui, é porque deu TIMEOUT. Pergunta ao usuário se deseja continuar.
+        ${continuar}=    Perguntar Continuar Windows    O robô continua aguardando. Clique em SIM para eu continuar esperando você salvar e lançar os outros dados. Clique em NÃO para encerrar operação?
+        
+        IF    not ${continuar}
+            Log To Console    Operação encerrada pelo usuário após timeout.
+            BREAK
+        END
+        Log To Console    Reiniciando ciclo de espera por mais 60 segundos...
+    END
+
+Executar Demais Lancamentos
+    Log To Console    Aguardando salvamento manual e detectando resultado...
+    
+    # Loop de espera (até 60 segundos) para detectar o resultado do clique manual em Salvar
+    FOR    ${i}    IN RANGE    60
+        # 1. Verifica primeiro se houve SUCESSO (o menu Histórico Salarial apareceu)
+        # O menu lateral é o sinal definitivo de que o cálculo foi salvo com sucesso.
+        ${sucesso}=    Run Keyword And Return Status    Element Should Be Visible    ${MENU_HISTORICO_SALARIAL}
+        
+        IF    ${sucesso}
+            Log To Console    Salvamento bem-sucedido! Menu Histórico Salarial detectado.
+            Click Element    xpath://li[@id='li_calculo_historico_salarial']/a
+            Esperar Processamento PjeCalc
+            RETURN    CONCLUIDO
+        END
+
+        # 2. Verifica se o sistema ainda está processando (Aguarde... visível)
+        # Se estiver processando, não verificamos erro ainda para evitar falsos positivos durante a transição.
+        ${esta_processando}=    Execute Javascript    
+        ...    var root = document.getElementById("formulario:msgAguarde");
+        ...    var panel = document.getElementById("formulario:msgAguardeContainer");
+        ...    function visivel(el){ if(!el){ return false; } var st = window.getComputedStyle(el); return st.display !== "none" && st.visibility !== "hidden" && st.opacity !== "0"; }
+        ...    return visivel(root) || visivel(panel);
+        
+        IF    ${esta_processando}
+            Sleep    1s
+            CONTINUE
+        END
+
+        # 3. Verifica se houve ERRO (apenas se não estiver processando e o menu não apareceu)
+        ${tem_erro}=    Execute Javascript    
+        ...    var painelMensagens = document.getElementById('formulario:painelMensagens');
+        ...    var divMsg = document.getElementById('divMensagem');
+        ...    function temTextoVisivel(el) { 
+        ...        if(!el) return false; 
+        ...        var st = window.getComputedStyle(el); 
+        ...        return st.display !== 'none' && st.visibility !== 'hidden' && el.offsetHeight > 0 && el.innerText.trim().length > 0; 
+        ...    }
+        ...    return temTextoVisivel(painelMensagens) || temTextoVisivel(divMsg);
+        
+        IF    ${tem_erro}
+            Log To Console    Erro ao salvar detectado no formulário.
+            Exibir Mensagem Windows    Erro ao salvar. Verifique as mensagens na tela do PJe-Calc.
+            RETURN    CONCLUIDO
+        END
+
+        Sleep    1s
+    END
+    RETURN    TIMEOUT
+    
+    # Se sair do loop FOR, significa que deu timeout
+    RETURN    TIMEOUT
 
 Format Date For Input
     [Arguments]    ${date_obj}
     ${formatted}=    Convert Date    ${date_obj}    result_format=%d%m%Y
     RETURN    ${formatted}
+
+Exibir Mensagem Windows
+    [Arguments]    ${mensagem}
+    # Chama a função Python que exibe o MessageBox do Windows (MB_OK | MB_ICONINFORMATION)
+    Evaluate    __import__('ctypes').windll.user32.MessageBoxW(0, "${mensagem}", "PJe-Calc Automação", 0x40)
+
+Perguntar Continuar Windows
+    [Arguments]    ${mensagem}
+    # Exibe MessageBox com botões SIM e NÃO (MB_YESNO | MB_ICONQUESTION)
+    # Retorna 6 para SIM e 7 para NÃO
+    ${resultado}=    Evaluate    __import__('ctypes').windll.user32.MessageBoxW(0, "${mensagem}", "Tempo Esgotado", 0x24)
+    ${status}=    Evaluate    True if ${resultado} == 6 else False
+    RETURN    ${status}

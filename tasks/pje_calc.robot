@@ -15,6 +15,6 @@ Criar E Preencher Novo Calculo Trabalhista
     Abrir PJe-Calc
     Navegar Para Novo Calculo
     Preencher Aba Dados Do Processo      ${dados_processo}
-    # Preencher Aba Parametros Do Calculo  ${dados_processo}
-    # Salvar Dados Do Calculo
+    Preencher Aba Parametros Do Calculo  ${dados_processo}
+    Salvar Dados Do Calculo
     # Fechar PJe-Calc

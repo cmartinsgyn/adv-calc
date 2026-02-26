@@ -9,6 +9,7 @@ import csv
 @dataclass
 class DadosProcesso:
     """Estrutura para conter os dados de um processo trabalhista."""
+    # Aba Dados do Processo
     numero_processo: str
     digito: str
     ano: str
@@ -31,6 +32,33 @@ class DadosProcesso:
     reclamado_adv_oab: str
     reclamado_adv_doc_fiscal: str
     data_autuacao: str
+
+    # Aba Parâmetros do Cálculo
+    estado: str
+    municipio: str
+    data_admissao: str
+    data_demissao: str
+    data_ajuizamento: str
+    data_inicial_calculo: str
+    data_final_calculo: str
+    aplicar_prescricao: bool
+    regime_trabalho: str
+    maior_remuneracao: str
+    ultima_remuneracao: str
+    prazo_aviso_previo: str
+    projetar_aviso_indenizado: bool
+    limitar_avos_periodo: bool
+    zerar_valor_negativo: bool
+    considerar_feriados_estaduais: bool
+    considerar_feriados_municipais: bool
+    carga_horaria_semanal: str
+    carga_horaria_mensal: str
+    divisor_horas_extras: str
+    sabado_dia_util: bool
+    
+    # Exceções (listas de dicionários)
+    excecoes_carga_horaria: list = None
+    excecoes_sabado: list = None
 
 def localizar_bat_pjecalc() -> str:
     """
@@ -181,40 +209,56 @@ def criar_opcoes_novo(navegador: str, porta: int = 9222, com_debug_port: bool = 
 def obter_dados_para_calculo(numero_busca: str = "0000123") -> DadosProcesso:
     """
     Busca dados em um arquivo CSV na pasta do projeto baseado no número do processo.
-    O arquivo deve seguir o padrão calc_XXXXXXX.csv.
+    O arquivo deve seguir o padrão calc_XXXXXXX.csv na pasta dados.
     """
     filename = f"calc_{numero_busca}.csv"
-    filepath = os.path.join(os.getcwd(), filename)
+    filepath = os.path.join(os.getcwd(), "dados", filename)
     
+    def to_bool(val):
+        return str(val).strip().upper() == "SIM"
+
     if not os.path.exists(filepath):
-        # Fallback para dados fixos se o arquivo não existir (para testes iniciais)
-        return DadosProcesso(
-            numero_processo="0000123",
-            digito="45",
-            ano="2025",
-            tribunal="18",
-            vara="0012",
-            valor_da_causa="50000,00",
-            reclamante_nome="José da Silva",
-            reclamante_doc_fiscal="12345678901",
-            reclamante_doc_prev="12345678901",
-            reclamante_adv_nome="Dr. Advogado Reclamante",
-            reclamante_adv_oab="123456",
-            reclamante_adv_doc_fiscal="26375286050",
-            reclamado_nome="Construtora Exemplo S.A.",
-            reclamado_doc_fiscal="12345678000199",
-            reclamado_adv_nome="Dra. Advogada Reclamada",
-            reclamado_adv_oab="654321",
-            reclamado_adv_doc_fiscal="91036537064",
-            data_autuacao="20022026"
-        )
+        # Exibe mensagem de erro para o usuário e encerra
+        try:
+            import ctypes
+            ctypes.windll.user32.MessageBoxW(
+                0,
+                "Não foi encontrado a base dados para alimentar o Pje-Calc",
+                "Erro de Dados",
+                0x10  # MB_ICONERROR
+            )
+        except Exception:
+            # Fallback para console se não estiver no Windows ou falhar ctypes
+            print("\nERRO: Não foi encontrado a base dados para alimentar o Pje-Calc\n")
+            
+        raise FileNotFoundError(f"Não foi encontrado a base dados para alimentar o Pje-Calc: {filepath}")
 
     dados_dict = {}
+    excecoes_ch = []
+    excecoes_sab = []
+    
     with open(filepath, mode='r', encoding='utf-8') as csvfile:
         reader = csv.reader(csvfile, delimiter=';')
         for row in reader:
-            if len(row) == 2:
-                dados_dict[row[0].strip()] = row[1].strip()
+            if len(row) >= 2:
+                key = row[0].strip()
+                val = row[1].strip()
+                if key == "Excecao_CargaHoraria":
+                    # Formato: inicio,fim,valor (valor pode conter vírgula decimal)
+                    # Ex: 01012021,31122021,180,00 -> split gera 4 partes
+                    parts = val.split(',')
+                    if len(parts) >= 3:
+                        inicio = parts[0]
+                        fim = parts[1]
+                        valor = ",".join(parts[2:]) # Reagrupa o valor decimal
+                        excecoes_ch.append({"inicio": inicio, "fim": fim, "valor": valor})
+                elif key == "Excecao_Sabado":
+                    # Formato: inicio,fim
+                    parts = val.split(',')
+                    if len(parts) == 2:
+                        excecoes_sab.append({"inicio": parts[0], "fim": parts[1]})
+                else:
+                    dados_dict[key] = val
 
     return DadosProcesso(
         numero_processo=dados_dict.get("Identificacao do Processo_Numero", ""),
@@ -234,5 +278,30 @@ def obter_dados_para_calculo(numero_busca: str = "0000123") -> DadosProcesso:
         reclamado_adv_nome=dados_dict.get("Reclamado_Advogado_Nome", ""),
         reclamado_adv_oab=dados_dict.get("Reclamado_Advogado_OAB", ""),
         reclamado_adv_doc_fiscal=dados_dict.get("Reclamado_Advogado_Documento_Fiscal_Numero", ""),
-        data_autuacao=dados_dict.get("Identificacao do Processo_Autuado_em", "")
+        data_autuacao=dados_dict.get("Identificacao do Processo_Autuado_em", ""),
+        
+        # Parâmetros
+        estado=dados_dict.get("Parametros_Estado", "GO"),
+        municipio=dados_dict.get("Parametros_Municipio", "GOIANIA"),
+        data_admissao=dados_dict.get("Parametros_Admissao", ""),
+        data_demissao=dados_dict.get("Parametros_Demissao", ""),
+        data_ajuizamento=dados_dict.get("Parametros_Ajuizamento", ""),
+        data_inicial_calculo=dados_dict.get("Parametros_Data_Inicial", ""),
+        data_final_calculo=dados_dict.get("Parametros_Data_Final", ""),
+        aplicar_prescricao=to_bool(dados_dict.get("Parametros_Aplicar_Prescricao", "SIM")),
+        regime_trabalho=dados_dict.get("Parametros_Regime_Trabalho", "INTEGRAL"),
+        maior_remuneracao=dados_dict.get("Parametros_Maior_Remuneracao", ""),
+        ultima_remuneracao=dados_dict.get("Parametros_Ultima_Remuneracao", ""),
+        prazo_aviso_previo=dados_dict.get("Parametros_Prazo_Aviso_Previo", "APURACAO_CALCULADA"),
+        projetar_aviso_indenizado=to_bool(dados_dict.get("Parametros_Projetar_Aviso_Indenizado", "SIM")),
+        limitar_avos_periodo=to_bool(dados_dict.get("Parametros_Limitar_Avos_Periodo", "NAO")),
+        zerar_valor_negativo=to_bool(dados_dict.get("Parametros_Zerar_Valor_Negativo", "NAO")),
+        considerar_feriados_estaduais=to_bool(dados_dict.get("Parametros_Considerar_Feriados_Estaduais", "SIM")),
+        considerar_feriados_municipais=to_bool(dados_dict.get("Parametros_Considerar_Feriados_Municipais", "SIM")),
+        carga_horaria_semanal=dados_dict.get("Parametros_Carga_Horaria_Padrao_Semanal", "44,00"),
+        carga_horaria_mensal=dados_dict.get("Parametros_Carga_Horaria_Padrao_Mensal", "220,00"),
+        divisor_horas_extras=dados_dict.get("Parametros_Divisor_Horas_Extras", "220,00"),
+        sabado_dia_util=to_bool(dados_dict.get("Parametros_Sabado_Dia_Util", "SIM")),
+        excecoes_carga_horaria=excecoes_ch,
+        excecoes_sabado=excecoes_sab
     )
